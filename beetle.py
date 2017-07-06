@@ -8,8 +8,9 @@ The dice game Beetle, developed using Python 3.6.1"""
 from random import randint
 import signal
 import sys  # For capturing Ctrl+C
+import os
 
-class Die(object):
+class Die:
     """Die that can roll between 1 and given number. Default of 6"""
 
     def __init__(self, num_sides=6):
@@ -22,7 +23,7 @@ class Die(object):
         return randint(1, self.__num_sides)
 
 
-class Beetle(object):
+class Beetle:
     """The core class of this program.
 
     Holds data related to game state for a single player."""
@@ -86,13 +87,13 @@ class Beetle(object):
 
         return False  # we didn't move forward in the state machine
 
-
-
-    def print(self) -> str:
+    def __str__(self) -> str:
         """Pretty string representation of the beetle"""
         return ""  #TODO Print ascii art!
 
-    __str__ = print
+    def print(self):
+        """Prints string representation directly to console"""
+        print(str(self))
 
     def complete(self) -> bool:
         """Returns true if beetle is complete and the game has been won"""
@@ -100,21 +101,21 @@ class Beetle(object):
                self.__left_antenna and self.__right_antenna and self.__left_eye and self.__right_eye
 
 
-class Game(object):
+class Game:
     """Class representing a single game.
 
     One instance will be created for each new game."""
     def __init__(self, num_players=2):
         """Sets up a new game"""
-        self._players = []
+        self.__players = []
         for _ in range(num_players):
-            self._players.append(Beetle())
-        self._die = Die()
+            self.__players.append(Beetle())
+        self.__die = Die()
 
     def turn(self):
         """Takes a turn for all players"""
-        for player in self._players:
-            player.turn(self._die.roll())
+        for player in self.__players:
+            player.turn(self.__die.roll())
             if player.complete:
                 print("GAME OVER")
                 return True
@@ -133,6 +134,7 @@ def main():
                 pass
 
             input("Press Enter to continue or Ctrl+C to exit.")
+            os.system('cls' if os.name == 'nt' else 'clear')
 
         except KeyboardInterrupt:
             print("\nGoodbye.")
