@@ -48,41 +48,49 @@ class Beetle:
 
         # Create the body if 1 is rolled
         if not self.__body and roll == 1:
+            print(self.name, "rolled a 1, built body")
             self.__body = True
             return True
 
-        # Create the head if 2 is rolled
-        if not self.__head and roll == 2:
+        # Create the head if 2 is rolled once 1 has already been rolled
+        if self.__body and not self.__head and roll == 2:
+            print(self.name, "rolled a 2, built head")
             self.__head = True
             return True
 
         # Create the left legs if 3 is rolled
-        if not self.__left_legs and roll == 3:
+        if self.__head and not self.__left_legs and roll == 3:
+            print(self.name, "rolled a 3, built left legs")
             self.__left_legs = True
             return True
 
         # Create the right legs if 3 is rolled
-        if not self.__right_legs and roll == 3:
+        if self.__left_legs and not self.__right_legs and roll == 3:
+            print(self.name, "rolled a 3, built right legs")
             self.__right_legs = True
             return True
 
         # Create the left antenna if 4 is rolled
-        if not self.__left_antenna and roll == 4:
+        if self.__right_legs and not self.__left_antenna and roll == 4:
+            print(self.name, "rolled a 4, built left antenna")
             self.__left_antenna = True
             return True
 
         # Create the right antenna if 4 is rolled
-        if not self.__right_antenna and roll == 4:
+        if self.__left_antenna and not self.__right_antenna and roll == 4:
+            print(self.name, "rolled a 4, built right antenna")
             self.__right_antenna = True
             return True
 
         # Create the left eye if 5 is rolled
-        if not self.__left_eye and roll == 5:
+        if self.__right_antenna and not self.__left_eye and roll == 5:
+            print(self.name, "rolled a 5, built left eye")
             self.__left_eye = True
             return True
 
         # Create the right eye if 5 is rolled
-        if not self.__right_eye and roll == 5:
+        if self.__left_eye and not self.__right_eye and roll == 5:
+            print(self.name, "rolled a 5, built right eye")
             self.__right_eye = True
             return True
 
@@ -123,15 +131,16 @@ class Game:
     def turn(self):
         """Takes a turn for the current player."""
         for player in self.__players:
-            player.turn(self.__die.roll())
-            print(player)
+            roll = self.__die.roll()
+            player.turn(roll)
+            print(player.name, 'rolled a', roll)
             if player.complete():
                 if __name__ == '__main__':
                     if player.name is not None:
                         print(player.name, "wins!")
                     print("GAME OVER")
-                yield True
-            yield False
+                yield True  # yield returns a generator objectthat keeps track of its internal state
+            yield False     # so we can call turn multiple times per round, once for each player
 
     def round(self):
         """Takes a turn for all players"""
