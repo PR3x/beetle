@@ -11,7 +11,7 @@ import sys  # For capturing Ctrl+C
 import os
 
 class Die:
-    """Die that can roll between 1 and given number. Default of 6"""
+    """Die that can roll between 1 and given number. Default of 6 sides"""
 
     def __init__(self, num_sides=6):
         """Default number of sides is 6"""
@@ -28,8 +28,9 @@ class Beetle:
 
     Holds data related to game state for a single player."""
 
-    def __init__(self):
+    def __init__(self, name=None):
         """Creates a new gameboard for a player"""
+        self.name = name
         self.__body = False
         self.__head = False
         self.__left_legs = False
@@ -89,7 +90,11 @@ class Beetle:
 
     def __str__(self) -> str:
         """Pretty string representation of the beetle"""
-        return ""  #TODO Print ascii art!
+        percent_complete = sum([self.__body, self.__head,
+                                self.__left_legs, self.__right_legs,
+                                self.__left_antenna, self.__right_antenna,
+                                self.__left_eye, self.__right_eye]) * 12.5
+        return '{} is {}% complete'.format(self.name, percent_complete)  #TODO Print ascii art!
 
     def print(self):
         """Prints string representation directly to console"""
@@ -97,8 +102,10 @@ class Beetle:
 
     def complete(self) -> bool:
         """Returns true if beetle is complete and the game has been won"""
-        return self.__body and self.__head and self.__left_legs and self.__right_legs and \
-               self.__left_antenna and self.__right_antenna and self.__left_eye and self.__right_eye
+        return self.__body and self.__head and \
+               self.__left_legs and self.__right_legs and \
+               self.__left_antenna and self.__right_antenna and \
+               self.__left_eye and self.__right_eye
 
 
 class Game:
@@ -108,16 +115,21 @@ class Game:
     def __init__(self, num_players=2):
         """Sets up a new game"""
         self.__players = []
-        for _ in range(num_players):
-            self.__players.append(Beetle())
+        for i in range(num_players):
+            playername = "Player " + str(i+1)
+            self.__players.append(Beetle(playername))
         self.__die = Die()
 
     def turn(self):
         """Takes a turn for all players"""
         for player in self.__players:
             player.turn(self.__die.roll())
-            if player.complete:
-                print("GAME OVER")
+            print(player)
+            if player.complete():
+                if __name__ == '__main__':
+                    if player.name is not None:
+                        print(player.name, "wins!")
+                    print("GAME OVER")
                 return True
 
 
@@ -134,7 +146,7 @@ def main():
                 pass
 
             input("Press Enter to continue or Ctrl+C to exit.")
-            os.system('cls' if os.name == 'nt' else 'clear')
+            # os.system('cls' if os.name == 'nt' else 'clear')
 
         except KeyboardInterrupt:
             print("\nGoodbye.")
