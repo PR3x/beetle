@@ -93,7 +93,7 @@ class Beetle:
         percent_complete = sum([self.__body, self.__head,
                                 self.__left_legs, self.__right_legs,
                                 self.__left_antenna, self.__right_antenna,
-                                self.__left_eye, self.__right_eye]) * 12.5
+                                self.__left_eye, self.__right_eye]) * 100 / 8
         return '{} is {}% complete'.format(self.name, percent_complete)
 
     def print(self):
@@ -121,7 +121,7 @@ class Game:
         self.__die = Die()
 
     def turn(self):
-        """Takes a turn for all players"""
+        """Takes a turn for the current player."""
         for player in self.__players:
             player.turn(self.__die.roll())
             print(player)
@@ -130,11 +130,21 @@ class Game:
                     if player.name is not None:
                         print(player.name, "wins!")
                     print("GAME OVER")
+                yield True
+            yield False
+
+    def round(self):
+        """Takes a turn for all players"""
+        for turn in self.turn():
+            if turn:
                 return True
+        return False
 
 
 def cli_main():
-    """Core loop of program. Runs the game until Ctrl+C to exit."""
+    """Main loop of program in basic CLI mode.
+
+    Runs the game until exit requested."""
     # Ensure KeyboardInterrupt is fired on SIGINT
     signal.signal(signal.SIGINT, signal.default_int_handler)
 
@@ -142,15 +152,23 @@ def cli_main():
         try:
             game = Game()
 
-            while not game.turn():
+            while not game.round():
                 pass
 
-            input("Press Enter to play again or Ctrl+C to exit.")
+            key = input("Press Enter to play again or q to exit. ")
+            if key == 'q' or key == 'Q':
+                exit()
             # os.system('cls' if os.name == 'nt' else 'clear')
 
         except KeyboardInterrupt:
-            print("\nGoodbye.")
-            sys.exit(0)
+            print()
+            exit()
+
+
+def exit():
+    """Prints goodbye and quits the program"""
+    print("Goodbye.")
+    sys.exit(0)
 
 
 if __name__ == "__main__":
