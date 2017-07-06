@@ -119,13 +119,30 @@ class Beetle:
 
 class TkBeetle(Beetle):
     """A Beetle that can also draw itself to a Tk label"""
-    def __init__(self, name=None, imageLabel=None):
+    def __init__(self, name=None, imageLabel=None, app=None):
         super().__init__(self, name)
         self._image_label = imageLabel
+        self._app = app
 
     def draw(self):
         """Draws the beetle to imagelabel using included gif images"""
-        image = PhotoImage(file='right_eye.gif') #TODO choose the right file based on whats complete
+        image = self._app.none_image
+        if self._body:
+            image = self._app.body_image
+        if self._head:
+            image = self._app.head_image
+        if self._left_legs:
+            image = self._app.left_legs_image
+        if self._right_legs:
+            image = self._app.right_legs_image
+        if self._left_antenna:
+            image = self._app.left_antenna_image
+        if self._right_antenna:
+            image = self._app.right_antenna_image
+        if self._left_eye:
+            image = self._app.left_eye_image
+        if self._right_eye:
+            image = self._app.right_eye_image
         self._image_label['image'] = image
 
 
@@ -170,21 +187,37 @@ class Application(Frame):
         self.setup()
 
     def setup(self):
-        """Initialize the window"""
+        """Initialize the window and create some constants"""
+        # We need to keep a reference to each of the images to keep them from
+        # being garbage collected
+        self.none_image = PhotoImage(file='none.gif')
+        self.body_image = PhotoImage(file='body.gif')
+        self.head_image = PhotoImage(file='head.gif')
+        self.left_legs_image = PhotoImage(file='left_legs.gif')
+        self.right_legs_image = PhotoImage(file='right_legs.gif')
+        self.left_antenna_image = PhotoImage(file='left_antenna.gif')
+        self.right_antenna_image = PhotoImage(file='right_antenna.gif')
+        self.left_eye_image = PhotoImage(file='left_eye.gif')
+        self.right_eye_image = PhotoImage(file='right_eye.gif')
+
         self.grid(column=0, row=0, sticky=(N, W, E, S))
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
 
-        image = PhotoImage(file='right_eye.gif') #TODO change to none.gif
         self._beetle_1 = Label(self)
-        self._beetle_1['image'] = image
+        self._beetle_1['image'] = self.right_eye_image
         self._beetle_1.grid(column=0, row=0, sticky=(N, W))
+
         self._beetle_2 = Label(self)
-        self._beetle_2['image'] = image
+        self._beetle_2['image'] = self.right_eye_image
         self._beetle_2.grid(column=1, row=0, sticky=(N, E))
 
         self._testtext = Label(self, text="Testing")
-        self._testtext.grid(column=0, row=1, sticky=(N, W, S, E))
+        self._testtext.grid(row=1, sticky=(W, S, E))
+
+        for child in self.winfo_children():
+            # go through every child in the frame
+            child.grid_configure(padx=5, pady=5)
 
 
 def cli_main():
@@ -203,15 +236,15 @@ def cli_main():
 
             key = input("Press Enter to play again or q to exit. ")
             if key == 'q' or key == 'Q':
-                exit()
+                exit_game()
             # os.system('cls' if os.name == 'nt' else 'clear')
 
         except KeyboardInterrupt:
             print()
-            exit()
+            exit_game()
 
 
-def exit():
+def exit_game():
     """Prints goodbye and quits the program"""
     print("Goodbye.")
     sys.exit(0)
