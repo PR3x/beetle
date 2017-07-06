@@ -94,11 +94,11 @@ class Beetle:
                                 self.__left_legs, self.__right_legs,
                                 self.__left_antenna, self.__right_antenna,
                                 self.__left_eye, self.__right_eye]) * 12.5
-        return '{} is {}% complete'.format(self.name, percent_complete)  #TODO Print ascii art!
+        return '{} is {}% complete'.format(self.name, percent_complete)
 
     def print(self):
         """Prints string representation directly to console"""
-        print(str(self))
+        print(self)
 
     def complete(self) -> bool:
         """Returns true if beetle is complete and the game has been won"""
@@ -133,7 +133,7 @@ class Game:
                 return True
 
 
-def main():
+def cli_main():
     """Core loop of program. Runs the game until Ctrl+C to exit."""
     # Ensure KeyboardInterrupt is fired on SIGINT
     signal.signal(signal.SIGINT, signal.default_int_handler)
@@ -145,7 +145,7 @@ def main():
             while not game.turn():
                 pass
 
-            input("Press Enter to continue or Ctrl+C to exit.")
+            input("Press Enter to play again or Ctrl+C to exit.")
             # os.system('cls' if os.name == 'nt' else 'clear')
 
         except KeyboardInterrupt:
@@ -154,4 +154,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    cli_main()
