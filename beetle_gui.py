@@ -169,7 +169,7 @@ class Game:
                     if player.name is not None:
                         print(player.name, "wins!")
                     print("GAME OVER")
-                yield True  # yield returns a generator objectthat keeps track of its internal state
+                yield True  # yield returns a generator object that keeps track of its internal state
             yield False     # so we can call turn multiple times per round, once for each player
 
     def round(self):

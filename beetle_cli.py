@@ -166,15 +166,15 @@ def cli_main():
 
             key = input("Press Enter to play again or q to exit. ")
             if key == 'q' or key == 'Q':
-                exit()
+                game_exit()
             # os.system('cls' if os.name == 'nt' else 'clear')
 
         except KeyboardInterrupt:
             print()
-            exit()
+            game_exit()
 
 
-def exit():
+def game_exit():
     """Prints goodbye and quits the program"""
     print("Goodbye.")
     sys.exit(0)
