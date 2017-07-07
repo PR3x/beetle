@@ -184,22 +184,25 @@ class Game:
         self.__players.append(TkBeetle("Player 1", imageLabel=app.beetle_1, app=app))
         self.__players.append(TkBeetle("Player 2", imageLabel=app.beetle_2, app=app))
         self.__die = Die()
+        self.complete = False
 
     def turn(self):
         """Takes a turn for the current player."""
+        round_info = ""
         for player in self.__players:
             roll = self.__die.roll()
             player.turn(roll)
-            round_info = player.name + ' rolled a ' + str(roll)
+            round_info += '{} rolled a {}\n'.format(player.name, roll)
             print(round_info)
             self._app.infotext['text'] = round_info
             if player.complete():
                 if player.name is not None or player.name is not "":
                     print(player.name, "wins!")
                 print("GAME OVER")
+                self.complete = True
                 yield True # yield returns a generator object that keeps track of its internal state
-
             yield False    # so we can call turn multiple times per round, once for each player
+
     def round(self):
         """Takes a turn for all players"""
         for turn in self.turn():
@@ -212,7 +215,9 @@ class Application(Frame):
     """Application class wrapping the main GUI frame"""
     def __init__(self, parent):
         Frame.__init__(self, parent, padding="3 3 12 12")
+        self._parent = parent
         self.setup()
+        self.reset()
 
     def setup(self):
         """Initialize the window and create some constants"""
@@ -245,22 +250,38 @@ class Application(Frame):
         self.infotext = Label(self, text="Testing")
         self.infotext.grid(column=1, row=1, sticky=(W, S, E))
 
-        self._beetle_1_button = Button(self, text="Roll", command=self.turn)
-        self._beetle_1_button.grid(column=0, row=1, sticky=(W, S))
+        self._turn_button = Button(self, text="Roll", command=self.turn)
+        self._turn_button.grid(column=0, row=1, sticky=(W, S))
 
-        self._beetle_2_button = Button(self, text="Roll", command=self.turn)
-        self._beetle_2_button.grid(column=2, row=1, sticky=(E, S))
+        self._reset_button = Button(self, text="Reset", command=self.reset)
+        self._reset_button.grid(column=2, row=1, sticky=(E, S))
 
         for child in self.winfo_children():
             # go through every child and set some params
             child.grid_configure(padx=5, pady=5)
 
-        # Set up the game last so everything is initialized
-        self._game = Game(app=self)
+        self._turn_button.focus()
 
     def turn(self):
         """Takes a turn in the game"""
         self._game.round()
+        if self._game.complete:
+            self.game_over()
+
+    def game_over(self):
+        """Caled when a player wins the game"""
+        # The game is over! Disable rolling more turns.
+        self._turn_button.state(['disabled'])
+        self._reset_button.focus()
+        self.infotext['text'] += "Game Over!"
+
+    def reset(self):
+        """Resets the game state"""
+        self._game = Game(app=self)
+        self.beetle_1['image'] = self.none_image
+        self.beetle_2['image'] = self.none_image
+        self._turn_button.state(['!disabled'])
+        self._turn_button.focus()
 
 
 def cli_main():
