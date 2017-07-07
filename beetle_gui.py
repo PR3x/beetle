@@ -5,8 +5,9 @@
 @date 6 July 2017
 
 The dice game Beetle, developed using Python 3.6.1, using a Tk GUI"""
-#    Copyright 2017 Jacob Rigby
 
+#    Copyright 2017 Jacob Rigby
+#
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
 #    You may obtain a copy of the License at
@@ -22,9 +23,8 @@ The dice game Beetle, developed using Python 3.6.1, using a Tk GUI"""
 from random import randint
 import signal
 import sys  # For capturing Ctrl+C
-import os
-from tkinter import *
-from tkinter.ttk import *
+from tkinter import *       # Tkinter GUI components
+from tkinter.ttk import *   # Modern Tkinter ToolKit components
 
 class Die:
     """Die that can roll between 1 and given number. Default of 6 sides"""
@@ -180,8 +180,9 @@ class Game:
     def __init__(self, app=None):
         """Sets up a new game"""
         self.__players = []
-        self.__players.append(TkBeetle("Player 1", app))
-        self.__players.append(TkBeetle("Player 2", app))
+        self._app = app
+        self.__players.append(TkBeetle("Player 1", imageLabel=app.beetle_1, app=app))
+        self.__players.append(TkBeetle("Player 2", imageLabel=app.beetle_2, app=app))
         self.__die = Die()
 
     def turn(self):
@@ -189,12 +190,13 @@ class Game:
         for player in self.__players:
             roll = self.__die.roll()
             player.turn(roll)
-            print(player.name, 'rolled a', roll)
+            round_info = player.name + ' rolled a ' + str(roll)
+            print(round_info)
+            self._app.infotext['text'] = round_info
             if player.complete():
-                if __name__ == '__main__':
-                    if player.name is not None or player.name is not "":
-                        print(player.name, "wins!")
-                    print("GAME OVER")
+                if player.name is not None or player.name is not "":
+                    print(player.name, "wins!")
+                print("GAME OVER")
                 yield True # yield returns a generator object that keeps track of its internal state
 
             yield False    # so we can call turn multiple times per round, once for each player
@@ -210,7 +212,6 @@ class Application(Frame):
     """Application class wrapping the main GUI frame"""
     def __init__(self, parent):
         Frame.__init__(self, parent, padding="3 3 12 12")
-        self._game = Game(app=self)
         self.setup()
 
     def setup(self):
@@ -232,16 +233,17 @@ class Application(Frame):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
 
-        self._beetle_1 = Label(self)
-        self._beetle_1['image'] = self.none_image
-        self._beetle_1.grid(column=0, row=0, sticky=(N, W))
+        # beetle_1 and beetle_2 need to be "public" for the same reason as the images
+        self.beetle_1 = Label(self)
+        self.beetle_1['image'] = self.none_image
+        self.beetle_1.grid(column=0, row=0, sticky=(N, W))
 
-        self._beetle_2 = Label(self)
-        self._beetle_2['image'] = self.none_image
-        self._beetle_2.grid(column=2, row=0, sticky=(N, E))
+        self.beetle_2 = Label(self)
+        self.beetle_2['image'] = self.none_image
+        self.beetle_2.grid(column=2, row=0, sticky=(N, E))
 
-        self._testtext = Label(self, text="Testing")
-        self._testtext.grid(column=1, row=1, sticky=(W, S, E))
+        self.infotext = Label(self, text="Testing")
+        self.infotext.grid(column=1, row=1, sticky=(W, S, E))
 
         self._beetle_1_button = Button(self, text="Roll", command=self.turn)
         self._beetle_1_button.grid(column=0, row=1, sticky=(W, S))
@@ -253,9 +255,12 @@ class Application(Frame):
             # go through every child and set some params
             child.grid_configure(padx=5, pady=5)
 
+        # Set up the game last so everything is initialized
+        self._game = Game(app=self)
+
     def turn(self):
         """Takes a turn in the game"""
-        self._game.turn()
+        self._game.round()
 
 
 def cli_main():
