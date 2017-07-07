@@ -2,8 +2,22 @@
 """CS 424 Program 1
 
 @author Jacob Rigby
+@date 6 July 2017
 
-The dice game Beetle, developed using Python 3.6.1, using a Tcl/Tk GUI"""
+The dice game Beetle, developed using Python 3.6.1, using a Tk GUI"""
+#    Copyright 2017 Jacob Rigby
+
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
 
 from random import randint
 import signal
@@ -18,7 +32,6 @@ class Die:
     def __init__(self, num_sides=6):
         """Default number of sides is 6"""
         self.__num_sides = num_sides
-
 
     def roll(self) -> int:
         """Generates a random number"""
@@ -99,6 +112,7 @@ class Beetle:
 
     def __str__(self) -> str:
         """Pretty string representation of the beetle"""
+        # There are 8 parts, and 100 percent
         percent_complete = sum([self._body, self._head,
                                 self._left_legs, self._right_legs,
                                 self._left_antenna, self._right_antenna,
@@ -110,7 +124,9 @@ class Beetle:
         print(self)
 
     def complete(self) -> bool:
-        """Returns true if beetle is complete and the game has been won"""
+        """Returns true if beetle is complete and the game has been won
+
+        All parts must exist."""
         return self._body and self._head and \
                self._left_legs and self._right_legs and \
                self._left_antenna and self._right_antenna and \
@@ -120,12 +136,12 @@ class Beetle:
 class TkBeetle(Beetle):
     """A Beetle that can also draw itself to a Tk label"""
     def __init__(self, name=None, imageLabel=None, app=None):
-        super().__init__(self, name)
+        Beetle.__init__(self, name=name)
         self._image_label = imageLabel
         self._app = app
 
     def draw(self):
-        """Draws the beetle to imagelabel using included gif images"""
+        """Draws the beetle to image_label using included gif images"""
         image = self._app.none_image
         if self._body:
             image = self._app.body_image
@@ -145,17 +161,27 @@ class TkBeetle(Beetle):
             image = self._app.right_eye_image
         self._image_label['image'] = image
 
+    def turn(self, roll):
+        """Represents the act of taking a turn in the game.
+
+        Moves forward a step in the state machine,
+        then draws itself to the screen"""
+        # take a normal turn and store the result to return later
+        # before drawing to the screen
+        out = Beetle.turn(self, roll)
+        self.draw()
+        return out
+
 
 class Game:
     """Class representing a single game.
 
     One instance will be created for each new game."""
-    def __init__(self, num_players=2):
+    def __init__(self, app=None):
         """Sets up a new game"""
         self.__players = []
-        for i in range(num_players):
-            playername = "Player " + str(i+1)
-            self.__players.append(Beetle(playername))
+        self.__players.append(TkBeetle("Player 1", app))
+        self.__players.append(TkBeetle("Player 2", app))
         self.__die = Die()
 
     def turn(self):
@@ -166,12 +192,12 @@ class Game:
             print(player.name, 'rolled a', roll)
             if player.complete():
                 if __name__ == '__main__':
-                    if player.name is not None:
+                    if player.name is not None or player.name is not "":
                         print(player.name, "wins!")
                     print("GAME OVER")
-                yield True  # yield returns a generator object that keeps track of its internal state
-            yield False     # so we can call turn multiple times per round, once for each player
+                yield True # yield returns a generator object that keeps track of its internal state
 
+            yield False    # so we can call turn multiple times per round, once for each player
     def round(self):
         """Takes a turn for all players"""
         for turn in self.turn():
@@ -184,12 +210,14 @@ class Application(Frame):
     """Application class wrapping the main GUI frame"""
     def __init__(self, parent):
         Frame.__init__(self, parent, padding="3 3 12 12")
+        self._game = Game(app=self)
         self.setup()
 
     def setup(self):
         """Initialize the window and create some constants"""
         # We need to keep a reference to each of the images to keep them from
-        # being garbage collected
+        # being garbage collected.
+        # Also, they should be "public" so that the beetles can get to them
         self.none_image = PhotoImage(file='none.gif')
         self.body_image = PhotoImage(file='body.gif')
         self.head_image = PhotoImage(file='head.gif')
@@ -205,19 +233,29 @@ class Application(Frame):
         self.rowconfigure(0, weight=1)
 
         self._beetle_1 = Label(self)
-        self._beetle_1['image'] = self.right_eye_image
+        self._beetle_1['image'] = self.none_image
         self._beetle_1.grid(column=0, row=0, sticky=(N, W))
 
         self._beetle_2 = Label(self)
-        self._beetle_2['image'] = self.right_eye_image
-        self._beetle_2.grid(column=1, row=0, sticky=(N, E))
+        self._beetle_2['image'] = self.none_image
+        self._beetle_2.grid(column=2, row=0, sticky=(N, E))
 
         self._testtext = Label(self, text="Testing")
-        self._testtext.grid(row=1, sticky=(W, S, E))
+        self._testtext.grid(column=1, row=1, sticky=(W, S, E))
+
+        self._beetle_1_button = Button(self, text="Roll", command=self.turn)
+        self._beetle_1_button.grid(column=0, row=1, sticky=(W, S))
+
+        self._beetle_2_button = Button(self, text="Roll", command=self.turn)
+        self._beetle_2_button.grid(column=2, row=1, sticky=(E, S))
 
         for child in self.winfo_children():
-            # go through every child in the frame
+            # go through every child and set some params
             child.grid_configure(padx=5, pady=5)
+
+    def turn(self):
+        """Takes a turn in the game"""
+        self._game.turn()
 
 
 def cli_main():
@@ -240,7 +278,7 @@ def cli_main():
             # os.system('cls' if os.name == 'nt' else 'clear')
 
         except KeyboardInterrupt:
-            print()
+            print()  # we need the extra newline
             exit_game()
 
 
@@ -250,7 +288,7 @@ def exit_game():
     sys.exit(0)
 
 def main():
-    """Sets up and runs the Tcl/Tk GUI"""
+    """Sets up and runs the Tk GUI"""
     root = Tk()
     root.title("Beetle by Jacob Rigby")
 
